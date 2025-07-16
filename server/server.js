@@ -1,13 +1,15 @@
 import './config/instrument.js'
 import express, { urlencoded } from "express"
 import cors from "cors"
-import 'dotenv/config'
+import dotenv from 'dotenv'
 import connectDB from "./config/db.js";
 import * as Sentry from "@sentry/node";
 import clerkWebhooks from './controller/webhooks.js';
 
 // Initialize Express
 const app = express()
+
+dotenv.config();
 
 // Middleware
 app.use(cors());
