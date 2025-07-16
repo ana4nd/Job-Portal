@@ -8,7 +8,7 @@ const clerkWebhooks  = async(req, res)=>{
         
         // Create a Svis instance with  webhook secret
 
-        const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET)
+        const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
         // Verifying Headers
 
