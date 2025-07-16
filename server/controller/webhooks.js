@@ -13,6 +13,11 @@ const clerkWebhooks = async (req, res) => {
 
     const { data, type } = evt;
 
+    console.log("✅ Webhook received");
+ console.log("➡️ Type:", type);
+ console.log("📦 Data:", data);
+
+
     console.log("Webhook received:", type);
 
     switch (type) {
