@@ -2,7 +2,8 @@ import express, { urlencoded } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { connectDB } from "./utils/db.js";
-import { clerkWebhooks } from "./controllers/webhooks.controller.js";
+import { clerkWebhooks } from "./controllers/webhook.controllers.js";
+
 
 
 const app = express();
