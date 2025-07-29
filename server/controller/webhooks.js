@@ -80,14 +80,14 @@ const clerkWebhooks = async (req, res) => {
             case "user.created":{
                 const userData = {
                     _id: data.id,
-                    email: data.email_addresses[0].email_address,
+                    email: data.email_addresses[0],
                     name: data.first_name + " " + data.last_name,
                     image: data.image_url,
                     resume: ""
                 }
 
                 await User.create(userData);
-                res.Json({})
+                res.json({})
                 break;
 
             }
@@ -99,12 +99,12 @@ const clerkWebhooks = async (req, res) => {
                 }
 
                 await User.findByIdAndUpdate(data.id, userData);
-                res.Json({})
+                res.json({})
                 break;
             }
             case "user.deleted":{
                 await User.findByIdAndDelete(data.id);
-                res.Json({})
+                res.json({})
                 break;
             }
             default:
