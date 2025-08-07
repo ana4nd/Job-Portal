@@ -27,7 +27,11 @@ const clerkWebhooks = async (req, res) => {
       case "user.created": {
         const userData = {
           _id: data.id,
-          email: data.email_addresses?.[0]?.email_address || "",
+          email:
+            Array.isArray(data.email_addresses) &&
+            data.email_addresses.length > 0
+              ? data.email_addresses[0].email_address
+              : "", // fallback if no email found
           name: `${data.first_name} ${data.last_name}`.trim(),
           image: data.image_url || data.profile_image_url || "",
           resume: "",
@@ -68,7 +72,9 @@ const clerkWebhooks = async (req, res) => {
 
       default:
         console.log("⚠️ Unhandled Clerk event type:", type);
-        return res.status(200).json({ success: true, message: "Unhandled event type" });
+        return res
+          .status(200)
+          .json({ success: true, message: "Unhandled event type" });
     }
   } catch (error) {
     console.error("❌ Webhook Error:", error.message);
