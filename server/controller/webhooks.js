@@ -12,73 +12,75 @@ const clerkWebhooks = async (req, res) => {
       "svix-signature": req.headers["svix-signature"],
     };
 
-    // 🔍 Debug logs
-    console.log("🔵 Headers received:", headers);
-    console.log("🔵 Raw Payload Buffer:", payload.toString());
+    // Debug logs
+    console.log("🔵 Raw Payload:", payload.toString());
+    console.log("🔵 Headers:", headers);
 
     const event = wh.verify(payload, headers);
-
-    // 🔍 Parsed event
-    console.log("🟢 Parsed event from Clerk:", JSON.stringify(event, null, 2));
-
     const { data, type } = event;
+
+    console.log("🟢 Event received:", type);
 
     switch (type) {
       case "user.created": {
+        // Email fallback if none provided
+        const hasEmail =
+          Array.isArray(data.email_addresses) && data.email_addresses.length > 0;
+
+        const email = hasEmail
+          ? data.email_addresses[0].email_address
+          : `${data.first_name || "no-name"}.${data.last_name || "user"}@noemail.com`;
+
         const userData = {
           _id: data.id,
-          email:
-            Array.isArray(data.email_addresses) &&
-            data.email_addresses.length > 0
-              ? data.email_addresses[0].email_address
-              : "", // fallback if no email found
-          name: `${data.first_name} ${data.last_name}`.trim(),
+          name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+          email,
           image: data.image_url || data.profile_image_url || "",
           resume: "",
         };
 
         console.log("🟢 Creating user:", userData);
 
-        // Create in DB
-        await User.create(userData);
-        console.log("✅ User created successfully in MongoDB");
-
-        return res.status(200).json({ success: true });
+        try {
+          await User.create(userData);
+          console.log("✅ User stored in MongoDB");
+          return res.status(200).json({ success: true });
+        } catch (dbError) {
+          console.error("❌ MongoDB Error:", dbError.message);
+          return res.status(500).json({ success: false, message: "DB Insert Failed" });
+        }
       }
 
       case "user.updated": {
+        const updatedEmail =
+          Array.isArray(data.email_addresses) && data.email_addresses.length > 0
+            ? data.email_addresses[0].email_address
+            : "";
+
         const updatedData = {
-          email: data.email_addresses?.[0]?.email_address || "",
-          name: `${data.first_name} ${data.last_name}`.trim(),
+          name: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+          email: updatedEmail,
           image: data.image_url || data.profile_image_url || "",
         };
 
         console.log("🟡 Updating user:", updatedData);
-
         await User.findByIdAndUpdate(data.id, updatedData, { new: true });
-        console.log("✅ User updated in MongoDB");
-
         return res.status(200).json({ success: true });
       }
 
       case "user.deleted": {
-        console.log("🔴 Deleting user with ID:", data.id);
-
+        console.log("🔴 Deleting user:", data.id);
         await User.findByIdAndDelete(data.id);
-        console.log("✅ User deleted from MongoDB");
-
         return res.status(200).json({ success: true });
       }
 
       default:
-        console.log("⚠️ Unhandled Clerk event type:", type);
-        return res
-          .status(200)
-          .json({ success: true, message: "Unhandled event type" });
+        console.log("⚠️ Unhandled event type:", type);
+        return res.status(200).json({ success: true });
     }
-  } catch (error) {
-    console.error("❌ Webhook Error:", error.message);
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    console.error("❌ Webhook Handler Error:", err.message);
+    return res.status(400).json({ success: false, message: err.message });
   }
 };
 
