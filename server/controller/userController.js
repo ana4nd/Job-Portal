@@ -4,37 +4,11 @@ import { v2 as cloudinary } from "cloudinary";
 
 // Get User Data
 
-// export const getUserData = async (req, res) => {
-//   const userId = req.auth.userId;
-
-//   try {
-//     const user = await User.findById(userId);
-
-//     if (!user) {
-//       return res.json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     res.json({
-//       success: true,
-//       user,
-//     });
-//   } catch (error) {
-//     res.json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// };
-
-
 export const getUserData = async (req, res) => {
-  const clerkId = req.auth.userId;
+  const userId = req.auth.userId;
 
   try {
-    const user = await User.findOne({ clerkId });
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.json({
@@ -54,6 +28,8 @@ export const getUserData = async (req, res) => {
     });
   }
 };
+
+
 
 // Apply for a job
 
