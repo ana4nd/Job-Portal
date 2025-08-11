@@ -1,25 +1,77 @@
 import { assets } from "@/assets/assets";
 import { AppContext } from "@/context/AppContext";
+import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 export const RecruiterLogin = () => {
+
+  const navigate = useNavigate();
+
+
   const [state, setState] = useState("Login");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [image, setImage] = useState(false);
   const [isTextDataSubmited, setIsTextDataSubmited] = useState(false);
-  const {setShowRecruiterLogin} = useContext(AppContext);
+  const {setShowRecruiterLogin, backendUrl, setCompanyToken,setCompanyData} = useContext(AppContext);
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
     if (state === "Signup" && !isTextDataSubmited) {
-      setIsTextDataSubmited(true);
-      return;
+      return setIsTextDataSubmited(true);
     }
 
     // You can handle final signup or login submission here
-    console.log("Form submitted:", { name, email, password });
+    // console.log("Form submitted:", { name, email, password });
+
+    try {
+
+      if(state === "Login"){
+        const { data } = await axios.post(`${backendUrl}/api/company/login`, { email, password });
+
+
+        if(data.success){
+          setCompanyData(data.company)
+          setCompanyToken(data.token)
+          localStorage.setItem('companyToken', data.token)
+          setShowRecruiterLogin(false)
+          navigate('/dashboard')
+        }
+        else{
+          toast.error(data.message)
+        }
+
+      }
+      else{
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("email", email);
+        formData.append("password", password);
+        formData.append("image", image);
+
+        const {data}  = await axios.post(`${backendUrl}/api/company/register`, formData);
+
+        if(data.success){
+          setCompanyData(data.company)
+          setCompanyToken(data.token)
+          localStorage.setItem('companyToken', data.token)
+          setShowRecruiterLogin(false)
+          navigate('/dashboard')
+        }
+        else{
+          toast.error(data.message)
+        }
+
+
+      }
+      
+    } catch (error) {
+      toast.error(error.message)
+    }
+
   };
 
   useEffect(()=>{
@@ -95,7 +147,7 @@ export const RecruiterLogin = () => {
 
         <button
           type="submit"
-          className="bg-blue-600 w-full text-white py-2 rounded-full mt-2"
+          className="bg-blue-600 w-full text-white py-2 rounded-full mt-2 cursor-pointer"
         >
           {state === "Login" ? "Login" : isTextDataSubmited ? "Create Account" : "Next"}
         </button>
